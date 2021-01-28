@@ -1,6 +1,6 @@
 # sidchip_utils
 
-![alt text](https://raw.githubusercontent.com/keithlegg/sidchip_utils/master/images/examples/sidthing.jpg) 
+![alt text](https://raw.githubusercontent.com/keithlegg/sidchip_utils/main/images/sidthing.png) 
 
 
 If you ever get the chance to purchase 30 rusty old SID chips from an engineer who worked at Commodore .... 
