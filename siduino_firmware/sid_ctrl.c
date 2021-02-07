@@ -134,9 +134,9 @@ AVR 328p Pin Mapping : low 3 bits of PORTC:
 void SIDdelay() 
 {
   unsigned char i;
-  for(i=0;i<10;i++) {
+  //for(i=0;i<1;i++) {
      __asm("nop\n\t");
-  }
+  //}
 }
 
 void delay() 
@@ -213,30 +213,67 @@ void wrSID(uint8_t addr, uint8_t data)
 */
 
 /***********************/
+/*
 //original - may or may not work 
+void wrSID(uint8_t addr, uint8_t data)
+{
+   //data gets written to chip when clock/02 is high and RW/CS are LOW (active high)  
+
+   running = true;
+
+   PORTC &= ~CLK_PIN; // clock low 
+
+   PORTC |= (CS_PIN);  // CS high- (deactive)
+   PORTB = addr;       // set Addr 
+   PORTD = data;       // set Data
+   SIDdelay();
+   
+   PORTC &= ~(CS_PIN); // CS low - (activate) 
+   PORTC &= ~RW_PIN;   // RW low
+   PORTC |= CLK_PIN;   // clock high  
+   SIDdelay();
+  
+
+   PORTC |= (CS_PIN); // CS high- (deactive)
+   PORTC |= RW_PIN;   // RW high
+   PORTC &= ~CLK_PIN; // clock low 
+   SIDdelay();
+
+   running = false;
+}
+*/
+
 void wrSID(uint8_t addr, uint8_t data)
 {
    //data gets written to chip when clock is high and RW/CS are LOW (active high)  
    running = true;
+   
    //WIRING =  pc0 CS, pc1 RW, pc2 CLK
-   PORTC |= CLK_PIN;   //clock high  
+    
    PORTC &= ~(CS_PIN); //CS low - Activate  - dont think this is needed 
-   SIDdelay();
-   PORTC &= ~CLK_PIN;  //clock low   
-   PORTC |= (CS_PIN);  // CS high- (deactive)
+   PORTC |= CLK_PIN;   //clock high 
+   __asm("nop\n\t");
+
+   PORTC |= (CS_PIN);  // CS high 
+   PORTC &= ~CLK_PIN;  //clock low
+   __asm("nop\n\t");
+
+   //set data to be written    
    PORTB = addr;       //set Addr 
    PORTD = data;       //set Data
-   SIDdelay();
-   PORTC |= CLK_PIN;   // clock high  
+   //data is written here ( second pulse on CS)
    PORTC &= ~(CS_PIN); // CS low - Activate 
    PORTC &= ~RW_PIN;   // RW low
-   SIDdelay();
-   PORTC &= ~CLK_PIN; // clock low 
+   PORTC |= CLK_PIN;   // clock high
+   __asm("nop\n\t");
+
    PORTC |= (CS_PIN); // CS high- (deactive)
    PORTC |= RW_PIN;   // RW high
+   PORTC &= ~CLK_PIN; // clock low 
+   __asm("nop\n\t");
+
    running = false;
 }
-
 
 /***********************/
 void sid_clear_registers(){
@@ -281,15 +318,21 @@ void enable_timer_isr()
     TCCR1B |= (1 << WGM12 ) ;  // Configure timer 1 for CTC mode
     TIMSK1 |= (1 << OCIE1A ) ; // Enable CTC interrupt
     sei();     //Enable global interrupts
-    
-    //not sure where to set this 70 was defualt - as low as 48?
-    //OCR1A = 70;// Set CTC compare value - controls "system-C64" clock speed via ISR
-    OCR1A = 50;
+   
 
-    TCCR1B |= (1 << CS10 )  ;  // NO prescalar (faster)
+    OCR1A = 7;// Set CTC compare value - controls "system-C64" clock speed via ISR
+
+    TCCR1A |= (1 << COM1A0);   // Toggle OC1A on Compare Match.
+    TCCR1B |= (1 << CS10);     // clock on, no pre-scaler
 }
 
-
+ISR ( TIMER1_COMPA_vect )
+{
+    // dont toggle clock while writing to chip! 
+    if(!running){
+        PORTC ^= CLK_PIN; //XOR the system clock when not loading data to chip      
+    }
+}
 
 /***********************/
 /***********************/
@@ -357,16 +400,5 @@ void break_connection(){
 
 
 
-/***********************/
-/***********************/
 
-
-ISR ( TIMER1_COMPA_vect )
-{
-    if (!running)
-    {
-        PORTC ^= CLK_PIN; //XOR the system clock when not loading data to chip      
-    }
-    //timenow++;
-}
 
