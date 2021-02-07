@@ -5,36 +5,42 @@ volatile bool running = false;
 //volatile unsigned long timenow = 0; //test 
 
 /*
+ ****************************************************************
+ SIDUINO - MEGA328P  Pin Mapping 
 
-AVR 328p Pin Mapping : low 3 bits of PORTC:
+ CLK         - PC2 0x04 - data read when high 
+ RW          - PC1 0x02 - RW stays low (DDR -> SID reads data)
+ CS          - PC0 0x01 - data read when low
+ RGBLED      - PC4,PC5,PC6 (0x08, 0x10, 0x20)
 
+ Address bus - portB
+ Data bus    - portD
+ ****************************************************************
 
- CLK -PC2 0x04 - data read when high 
- RW - PC1 0x02 - RW stays low (DDR -> SID reads data)
- CS - PC0 0x01 - data read when low
- RGBLED - PC4,PC5,PC6
+    For example:
 
- Address bus = portb
- Data bus= PortD
+    POKE 54273,255
 
-  /////////////////////////////////////////////////////////////
+    would look like this in binary:
 
-                o-o-TX-RX-RST-o-o    
-                  ------------
-              pd1 | MMduino  |
-              pd0 |          |             
-              rst |          |rst           -
-              gnd |          |Vcc           -
-              pd2 |          |pc3           -
-              pd3 |          |pc2-adc3      - SID CLK/02 
-              pd4 |          |pc1-adc2      - SID RW (ALWAYS LOW!) 
-              pd5 |          |pc0-adc1      - SID CS
-              pd6 |          |pb5-adc0      - 
-              pd7 |          |pb4-sck  -d13 - SIDADDR4
- SIDADDR0     pb0 |          |pb3-mosi -d11 - SIDADDR3
- SIDADDR1     pb1 |          |pb2-cs   -d10 - SIDADDR2
-                   ----------
-  /////////////////////////////////////////////////////////////
+    POKE 1101010000000001, 11111111
+
+    breaking down that address we get:
+
+    11010100 00000001
+
+    then "AND" masking the lower byte with 5 bits we get:
+
+    00000001 -LOWER BYTE of C64 POKE. 00011111 -& 0x1f MASK. xxx00001 -The resulting address masked out
+
+    not sure if this will ever work , but eventually if I get the timing correect I will add the 8 bit data port and put 3 DAC chips on the PCB to generate the 3 SID voices.
+
+    One word of advice - make sure you are very carefull to set EVERY pin properly. All pins not in use MUST bin the HI-Z state or the commodore will flip out and maybe even be damaged. I haven't hurt mine yet however.
+
+    Keith Legg April 12, 2014
+
+ ****************************************************************
+
  SID-ADR-Table:
 
      VALUE    ATTACK    DECAY/RELEASE
@@ -57,7 +63,7 @@ AVR 328p Pin Mapping : low 3 bits of PORTC:
    |   15  |    8 s   |     24 s      |
    +-------+----------+---------------+
 
-  /////////////////////////////////////////////////////////////
+ ****************************************************************
    SID-Maths:
 
     Frequency:
@@ -84,7 +90,17 @@ AVR 328p Pin Mapping : low 3 bits of PORTC:
       PulseWidth = (16Bit-Value / 40.96) %
 
 
-  /////////////////////////////////////////////////////////////
+ ****************************************************************
+
+   Playing a sound:
+
+      1. Set frequency and ADSR, and in case you use the pulse wave also set the pulse width.
+      2. Set the waveform and the GATE bit in the control register. Setting the gate bit will start the ADSR envelope generator.
+      3. Wait for as long as you wish the note to be played.
+      4. Clear gate bit. This will start the release phase of the ADSR.
+
+ ****************************************************************
+ 
   //FROM // http://www.oxyron.de/html/registers_sid.html
   ------------------------------------------------------------------------------------------------
                       7         6         5         4         3        2         1         0     
@@ -122,22 +138,21 @@ AVR 328p Pin Mapping : low 3 bits of PORTC:
 
 */
 
-/***********************/
-
-// RGB PINS 
-// PORTC = 0x08;
-// PORTC = 0x10;
-// PORTC = 0x20;
+/************************************************************/
+/************************************************************/
+//delay comammands - not really used but handy to have around 
 
 
 //VERY short delay to let the SID registers sync up 
 void SIDdelay() 
 {
-  unsigned char i;
-  //for(i=0;i<1;i++) {
-     __asm("nop\n\t");
-  //}
+  //unsigned char i;
+  //for(i=0;i<10;i++) {
+      __asm("nop\n\t");
+      //PORTC ^= CLK_PIN; //XOR the system clock when not loading data to chip      
+  //}  
 }
+
 
 void delay() 
 {
@@ -159,7 +174,15 @@ void longdelay()
   }
 }
 
-/***********************/
+
+/************************************************************/
+/************************************************************/
+/* set the AVR IO ports to be electrically compatible with SID 
+   this is for the SIDUINO boad only 
+   the board has a serious flaw!  RX/TX are wired to SID data 0,1 lines
+   you cant read/write serial whilst sending commands to SID 
+*/
+
 void init_SID_bus()
 {
 
@@ -181,67 +204,67 @@ void init_SID_bus()
 }
 
 
-/***********************/
-/*
-void wrSID(uint8_t addr, uint8_t data)
+/************************************************************/
+/************************************************************/
+// interrupt section 
+// we use a timer/interrupt to genrate a 1Mhz clock pulse when the SID is not recieveing a command 
+
+
+void enable_timer_isr()
 {
-   running = true;
-   
-   //WIRING =  pc0 CS, pc1 RW, pc2 CLK
+  // This sets up an 8 bit timer0 overflow
+  TIMSK0 = (1<<TOIE0);  //Enable a timer overflow interrupt
+  TCCR0A = 0;     //just a normal overflow
+  TCCR0B = (1<<CS00); //no prescale
+  sei();
+}
 
-   PORTC &= ~CLK_PIN;  //clock low   
-   PORTC &= ~RW_PIN;   // RW low
-   SIDdelay();
+ISR ( TIMER0_OVF_vect )
+{
+    TCNT0 = 255;
+    // dont toggle clock while writing to chip! 
+    if(!running){
+        PORTC ^= CLK_PIN; //XOR the system clock when not loading data to chip      
+    }
+}
 
-   PORTB = addr;       //set Addr 
-   PORTD = data;       //set Data
-   SIDdelay();
-   
-   PORTC |= CLK_PIN;   // clock high  
-   PORTC &= ~(CS_PIN); // CS low - Activate 
+/***************/
 
-   SIDdelay();
-   
-   PORTC &= ~CLK_PIN; // clock low 
+/*
+void enable_timer_isr()
+{
+    TCCR1B |= (1 << WGM12 ) ;  // Configure timer 1 for CTC mode
+    TIMSK1 |= (1 << OCIE1A ) ; // Enable CTC interrupt
+    sei();     //Enable global interrupts
+    OCR1A = 1;// Set CTC compare value - controls "system-C64" clock speed via ISR
+    TCCR1A |= (1 << COM1A0);   // Toggle OC1A on Compare Match.
+    TCCR1B |= (1 << CS10);     // clock on, no pre-scaler
+}
 
-   PORTC |= (CS_PIN); // CS high- (deactive)
-   PORTC |= RW_PIN;   // RW high
-
-   running = false;
-
+ISR ( TIMER1_COMPA_vect )
+{
+    // dont toggle clock while writing to chip! 
+    if(!running){
+        PORTC ^= CLK_PIN; //XOR the system clock when not loading data to chip      
+    }
 }
 */
 
-/***********************/
+/************************************************************/
+/************************************************************/
 /*
-//original - may or may not work 
-void wrSID(uint8_t addr, uint8_t data)
-{
-   //data gets written to chip when clock/02 is high and RW/CS are LOW (active high)  
+    The center of this whole thing -  how we get commands to the SID chip 
+    You can call with a 16 bit arg and cast to 8 
 
-   running = true;
+    EXAMPLE: (see also poke() command)
+       
+       uint16_t  sidaddr = 16;
+       uint16_t  value = 33;
+       wrSID((uint8_t)sidaddr, (uint8_t)value);
 
-   PORTC &= ~CLK_PIN; // clock low 
 
-   PORTC |= (CS_PIN);  // CS high- (deactive)
-   PORTB = addr;       // set Addr 
-   PORTD = data;       // set Data
-   SIDdelay();
-   
-   PORTC &= ~(CS_PIN); // CS low - (activate) 
-   PORTC &= ~RW_PIN;   // RW low
-   PORTC |= CLK_PIN;   // clock high  
-   SIDdelay();
-  
-
-   PORTC |= (CS_PIN); // CS high- (deactive)
-   PORTC |= RW_PIN;   // RW high
-   PORTC &= ~CLK_PIN; // clock low 
-   SIDdelay();
-
-   running = false;
-}
 */
+
 
 void wrSID(uint8_t addr, uint8_t data)
 {
@@ -275,7 +298,10 @@ void wrSID(uint8_t addr, uint8_t data)
    running = false;
 }
 
-/***********************/
+/************************************************************/
+/************************************************************/
+//canned commands for sid 
+
 void sid_clear_registers(){
   // Clear all 29 SID registers 
   //REM 20 FOR L = 0 TO 24: POKE S+L,0: NEXT
@@ -312,87 +338,7 @@ void sid_clear_registers(){
 
 
 
-/***********************/
-void enable_timer_isr()
-{
-    TCCR1B |= (1 << WGM12 ) ;  // Configure timer 1 for CTC mode
-    TIMSK1 |= (1 << OCIE1A ) ; // Enable CTC interrupt
-    sei();     //Enable global interrupts
-   
 
-    OCR1A = 7;// Set CTC compare value - controls "system-C64" clock speed via ISR
-
-    TCCR1A |= (1 << COM1A0);   // Toggle OC1A on Compare Match.
-    TCCR1B |= (1 << CS10);     // clock on, no pre-scaler
-}
-
-ISR ( TIMER1_COMPA_vect )
-{
-    // dont toggle clock while writing to chip! 
-    if(!running){
-        PORTC ^= CLK_PIN; //XOR the system clock when not loading data to chip      
-    }
-}
-
-/***********************/
-/***********************/
-//UART STUFF
-
-
-// page 183 of datasheet
-void USART_Init( unsigned int ubrr)
-{
-    UBRR0H = (unsigned char)(ubrr>>8);
-    UBRR0L = (unsigned char)ubrr;
-    /*Enable receiver and transmitter */
-    UCSR0B = (1<<RXEN0)|(1<<TXEN0);
-    /* Set frame format: 8data, 2stop bit */
-    UCSR0C = (1<<USBS0)|(3<<UCSZ00);
-}
-
-uint8_t USART_receive(void)
-{
-    while (!(UCSR0A & (1 << RXC0))) {/*Busy wait.*/}
-    return UDR0;
-}
-
-void USART_Transmit( unsigned char data )
-{
-  while ( !( UCSR0A & (1<<UDRE0)) );
-  UDR0 = data;
-}
-
-void print_byte( uint8_t data){
-   uint8_t i = 0;
-
-   for (i=0; i<=7; i++) {
-       //if ( !!(data & (1 << ii)) ){  // LSB
-       if ( !!(data & (1 << (7 - i))) ){  // MSB
-           USART_Transmit( BIT_OFF );
-       }else{
-           USART_Transmit( BIT_ON );
-       }
-    }
-    
-    USART_Transmit( 0xa ); //0xa = new line  
-    USART_Transmit( 0xd ); //0xd = carriage return
-}
-
-
-
-void echo_uart(){
-     uint8_t buf = USART_receive();
-     print_byte(buf);
-}
-
-void break_connection(){
-    PORTD = 0x00;    //clear port  (LEDS) 
-    USART_Transmit( 0x45 ); //E
-    USART_Transmit( 0x78 ); //x
-    USART_Transmit( 0x69 ); //i
-    USART_Transmit( 0x54 ); //T
-
-}
 
 
 

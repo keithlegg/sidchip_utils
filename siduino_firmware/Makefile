@@ -5,7 +5,7 @@ PROJECT=blink
 ###########################
 
  
-SOURCES=sid_ctrl.c virtual_c64.c
+SOURCES=sid_ctrl.c siduino.c
 
 
 ###########################

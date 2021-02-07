@@ -1,0 +1,616 @@
+#include "sid_ctrl.h"
+
+//extern volatile unsigned long timenow; //test 
+
+unsigned long lastupdate = 0; //test 
+
+
+/***************************************************/
+
+/*
+
+PORTD - DATA 
+PORTC - 
+
+C5 - RGB
+C4 - RGB
+C3 - RGB 
+
+*/
+
+
+//OLD STANDBY external no divide by eight
+//sudo avrdude -V -c usbtiny -p atmega328p  -U lfuse:w:0xff:m -U hfuse:w:0xd9:m 
+
+//FUSE SETTINGS ??
+//sudo avrdude -V -c usbtiny -p atmega328p  -U lfuse:w:0xde:m -U hfuse:w:0xd9:m  /----NO---->/ -U efuse:w:0xff:m 
+//sudo avrdude -V -c usbtiny -p atmega328p  -U lfuse:w:0xde:m -U hfuse:w:0xd9:m -U efuse:w:0xff:m 
+
+
+/*
+    10 S=54272
+    20 FOR L = 0 TO 24: POKE S+L,0: NEXT
+    30 POKE S+1,10
+    40 POKE S+5,10
+    50 POKE S+15,255
+    60 POKE S+24,100
+    70 POKE S+4,33
+    --------------------------
+    POKE 54273,10   = 11010100-00000001, 00001010  -NOTE TO PLAY // xx273 and xx272 = high freq , low freq  
+    POKE 54277,10   = 11010100-00000101, 00001010 - Attack Decay    - 255 is slowest attack
+    POKE 54278,255  = 11010100-00000110, 11111111 - Attack Decay    - 255 is slowest attack
+    POKE 54287,100  = 11010100-00001111, 01100100 - 
+    POKE 54296,15   = 11010100-00011000, 00011111 - volume 15 is highest
+    POKE 54276,33   = 11010100-00000100, 00100001
+
+    void play_sound2()
+    {
+        //POKE 54273,10    - Note to play
+        wrSID(0b00000001 , 0b00001010 );  
+        //POKE 54277,10    - Attack Decay
+        wrSID(0b00000101 , 0b00001010 );
+        //POKE 54278,255    - Sustain Release
+        wrSID(0b00000110 , 0b11111111 );
+        //POKE 54287,100    -   
+        wrSID(0b00001111 , 0b01100100 );
+        //POKE 54296,15     - full volume 
+        wrSID(0b00011000 , 0b00011111 );
+
+        //wrSID(0b00000100 , 0b00010001 );//POKE54276,17      - triangle wave
+        wrSID(0b00000100 , 0b00100001 );//POKE54276,33      - sawtooth wave
+
+    }
+
+*/
+
+
+/***************************************************/
+
+/*
+
+  //FROM // http://www.oxyron.de/html/registers_sid.html
+  ------------------------------------------------------------------------------------------------
+                      7         6         5         4         3        2         1         0     
+  ------------------------------------------------------------------------------------------------
+   0  - $D400 (W) FREQLO1                          Channel 1 Frequency Low-Byte
+   1  - $D401 (W) FREQHI1                          Channel 1 Frequency High-Byte
+   2  - $D402 (W) PWLO1                            Channel 1 Pulse Width (PW7-0)
+   3  - $D403 (W) PWHI1                     UNUSED              |       Channel 1 Pulse Width (PW11-8)
+   4  - $D404 (W) CR1     NOISE  |   PULSE  |   SAW  |   TRI    |  TEST  |  RING  |   SYNC  |   GATE
+   5  - $D405 (W) AD1             Channel 1 Attack              |       Channel 1 Decay
+   6  - $D406 (W) SR1             Channel 1 Sustain             |       Channel 1 Release
+   7  - $D407 (W) FREQLO2                          Channel 2 Frequency Low-Byte
+   8  - $D408 (W) FREQHI2                          Channel 2 Frequency High-Byte
+   9  - $D409 (W) PWLO2                            Channel 2 Pulse Width (PW7-0)
+   10 - $D40A (W) PWHI2                     UNUSED              |       Channel 2 Pulse Width (PW11-8)
+   11 - $D40B (W) CR2     NOISE  |   PULSE  |   SAW  |   TRI    |  TEST  |  RING  |   SYNC  |   GATE
+   12 - $D40C (W) AD2             Channel 2 Attack              |       Channel 2 Decay
+   13 - $D40D (W) SR2             Channel 2 Sustain             |       Channel 2 Release
+   14 - $D40E (W) FREQLO3                         Channel 3 Frequency Low-Byte
+   15 - $D40F (W) FREQHI3                         Channel 3 Frequency High-Byte
+   16 - $D410 (W) PWLO3                           Channel 3 Pulse Width (PW7-0)
+   17 - $D411 (W) PWHI3     unused                              | Channel 3 Pulse Width (PW11-8)
+   18 - $D412 (W) CR3     NOISE  |   PULSE  |   SAW  |   TRI    | TEST   |   RING |   SYNC  |   GATE
+   19 - $D413 (W) AD3              Channel 3 Attack             |       Channel 3 Decay
+   20 - $D414 (W) SR3              Channel 3 Sustain            |       Channel 3 Release
+   21 - $D415 (W) FCLO             unused                       |       Filter Cutoff Low (FC2-FC0)
+   22 - $D416 (W) FCHI      Filter Cutoff High (FC10-FC3)
+   23 - $D417 (W) Res/Filt  Filter Resonance  Filt Ex   Filt 3  Filt 2                           Filt 1
+   24 - $D418 (W) Mode/Vol  Ch3Off    HighPass  BandPass  LoPass|             Volume
+   25 - $D419 (R) POTX                        Potentiometer X
+   26 - $D41A (R) POTY                        Potentiometer Y
+   27 - $D41B (R) OSC3                        Channel 3 Oscillator
+   28 - $D41C (R) ENV3                        Channel 3 Envelope
+  ------------------------------------------------------------------------------------------------
+
+*/
+
+
+void play_spacechip()
+{
+  int x = 0;
+  int delay = 2;
+ 
+  for (x=0;x<20;x++)
+  {
+      wrSID(0b00000001 , 0b000101000); //POKE 54273, 40     - Note to play
+      _delay_ms(delay);  
+
+      wrSID(0b00000001 , 0b01010000); //POKE 54273, 80     - Note to play
+      _delay_ms(delay); 
+
+      wrSID(0b00000001 , 0b01100100); //POKE 54273, 100     - Note to play
+      _delay_ms(delay); 
+      
+      wrSID(0b00000001 , 0b01111000); //POKE 54273, 120     - Note to play
+      _delay_ms(delay); 
+      
+      wrSID(0b00000001 , 0b10001100); //POKE 54273, 140     - Note to play
+      _delay_ms(delay); 
+     
+      wrSID(0b00000001 , 0b10100000);  //POKE 54273, 160     - Note to play
+      _delay_ms(delay);
+  } 
+}
+
+/***************************************************/
+
+//FILTERS
+/*
+
+30 POKE 54296,31  : REM FULL VOLUME PLUS LOW PASS FILTER
+35 POKE 54295,1   : REM SELECT FILTER FOR VOICE 1
+37 POKE 54294,128 : POKE 54293,7  : REM SELECT CUTOFF FREQUENCY
+// 
+50 pokes+10,8:pokes+22,128:pokes+23,244
+
+*/
+
+void test_filters()
+{
+    int delay     = 100;
+    int num_loops = 4;
+
+    //wrSID(0b00011000 , 0b00001111 ); // Set maximum Volume
+    wrSID(0b00011000 , 0b00001111 );   // 54296,31  FULL VOLUME PLUS LOW PASS FILTER
+    wrSID(0b00000100 , 0b00100001 );   // 54276,33  - sawtooth wave
+
+    /************/
+    wrSID(0b00010111 , 0b00000000 );   // 54295,0  - Voice 1 filter enable
+    
+    wrSID(0b00010101 , 0b00000010 );   // (l) 54293,0  - cutoff filter 0-2 
+    wrSID(0b00010110 , 0b00000111 );   // (h) 54293,0  - cutoff filter 0-7 
+    
+    //wrSID(0b00010111 , 0b00000100 );   //     54295,0  - resonance filter 4-7 
+
+    //wrSID(0b00010111 , 0b00000100 );   //     54296,4  - low pass filter
+    //wrSID(0b00010111 , 0b00000101 );   //     54296,5  - band pass filter
+    //wrSID(0b00010111 , 0b00000110 );   //     54296,6  - high pass filter    
+
+    wrSID(0b00000001 , 0b01000000); // 54273, 40     - Note to play
+
+    for (int x= 0;x<num_loops;x++)
+    {
+        wrSID(0b00010111 , 0b00000100 );   //     54295,0  - resonance filter 4-7 
+        //wrSID(0b00010111 , 0b00000100 );   //     54296,4  - low pass filter      
+        _delay_ms(delay);  
+
+         wrSID(0b00010111 , 0b00000101 );   //     54295,0  - resonance filter 4-7 
+        //wrSID(0b00010111 , 0b00000101 );   //     54296,5  - band pass filter        
+        _delay_ms(delay); 
+
+         wrSID(0b00010111 , 0b00000111 );   //     54295,0  - resonance filter 4-7 
+        //wrSID(0b00010111 , 0b00000110 );   //     54296,6  - high pass filter  
+        _delay_ms(delay); 
+        
+
+    }
+
+
+}
+
+/***************************************************/
+
+void voice1_scale()
+{
+
+      int delay     = 10;
+      int num_loops = 2;
+
+      wrSID(0b00000100, 0b00010001 );// 54276,17      - triangle wave
+
+      for (int x= 0;x<num_loops;x++)
+      {
+      
+        wrSID(0b00000001, 0b000101000); // 54273, 40     - Note to play
+        _delay_ms(delay);  
+
+        wrSID(0b00000001, 0b01010000); // 54273, 80     - Note to play
+        _delay_ms(delay); 
+
+        wrSID(0b00000001, 0b01100100); // 54273, 100     - Note to play
+        _delay_ms(delay); 
+        
+        wrSID(0b00000001, 0b01111000); // 54273, 120     - Note to play
+        _delay_ms(delay); 
+        
+        wrSID(0b00000001, 0b10001100); // 54273, 140     - Note to play
+        _delay_ms(delay); 
+       
+        wrSID(0b00000001, 0b10100000);  // 54273, 160     - Note to play
+        _delay_ms(delay); 
+    }
+
+      
+      wrSID(0b00000100, 0b00100001 );//54276,33      - sawtooth wave
+
+      for (int x= 0;x<num_loops;x++)
+      {
+        wrSID(0b00000001, 0b000101000); // 54273, 40     - Note to play
+        _delay_ms(delay);  
+
+        wrSID(0b00000001, 0b01010000); // 54273, 80     - Note to play
+        _delay_ms(delay); 
+
+        wrSID(0b00000001, 0b01100100); // 54273, 100     - Note to play
+        _delay_ms(delay); 
+        
+        wrSID(0b00000001, 0b01111000); // 54273, 120     - Note to play
+        _delay_ms(delay); 
+        
+        wrSID(0b00000001, 0b10001100); // 54273, 140     - Note to play
+        _delay_ms(delay); 
+       
+        wrSID(0b00000001, 0b10100000);  // 54273, 160     - Note to play
+        _delay_ms(delay); 
+    }
+
+
+}
+
+/***************************************************/
+
+void voice2_scale()
+{
+
+      int delay     = 3;
+      int num_loops = 255;
+
+      //wrSID(0b00001011, 0b00100001 );// 54283,33  - sawtooth wave
+      //wrSID(0b00001011, 0b00100001 );// 54283,17  - triangle wave
+     
+      //wrSID(0b00001000, 0b00001000 );  //54280  - pulse width (l)     
+      //wrSID(0b00001001, 0b00001000 );  //54281  - pulse width (h)
+
+
+      //MULTI VOICE TEST 
+      //wrSID(0b00000001, 0b00110000); // 54273,   - voice1 Note to play
+
+      // wrSID(0b00000111, 0b10000010 ); // (l) 54279       - Set Frequency of voice 2
+      // wrSID(0b00001000, 0b00101000 ); // (h) 54280, 40   - Note to play
+      // _delay_ms(delay);  
+
+      for (int x= 0;x<num_loops;x++)
+      {
+        //wrSID(0b00001000, 0 );  //54280  - pulse width (l)     
+        //wrSID(0b00001001, x );  //54281  - pulse width (h)
+        _delay_ms(delay); 
+       
+        //wrSID(0b00001000, 0b00100000 );  //54280  - pulse width (l)     
+        //wrSID(0b00001001, 0b00100000 );  //54281  - pulse width (h)
+
+      }
+
+}
+
+
+/***************************************************/
+
+void sweep_freqency_v1()
+{
+    int delay = 10;//ms 
+    int steps = 255;
+
+    wrSID(0b00011000, 0b00001111 ); // Set maximum Volume
+    
+    //wrSID(0b00000100, 0b00010001 );// 54276,17      - triangle wave
+    wrSID(4, 17 );// 54276,17      - triangle wave
+
+    for (int x= 0;x<steps;x++)
+    {
+      wrSID(1,x);
+      _delay_ms(delay); 
+    }
+      
+
+}
+
+/***************************************************/
+
+void sweep_pulse_width()
+{
+    int delay = 100;//ms 
+    int steps = 255;
+
+    wrSID(0b00011000, 0b00001111 ); // Set maximum Volume
+ 
+    //wrSID(1, 40); // ,   - voice1 Note to play
+
+    for (int x= 0;x<steps;x++)
+    {
+
+      //wrSID(2, 0 );  // 54274  - pulse width (l)     
+      wrSID(3, x );  // 54275  - pulse width (h)
+
+      _delay_ms(delay); 
+    }
+      
+
+}
+
+
+/***************************************************/
+
+
+//used as a hello user and to test RGB led connections
+void test_leds(void){
+
+   int a = 0;
+   for (a=0;a<5;a++){
+      PORTC &= ~(0x38);;  //all LEDS off (pc3,pc4,pc5) 
+      PORTC |= (0x8); //pc3 on - green  
+      _delay_ms(10); 
+
+      PORTC &= ~(0x38);;  //all LEDS off 
+      PORTC |= (0x10); //pc4 on - blue  
+      _delay_ms(10);
+
+      PORTC &= ~(0x38);;  //all LEDS off 
+      PORTC |= (0x20); //pc5 on - red 
+      _delay_ms(10); 
+
+      PORTC &= ~(0x1c);;  //all LEDS off  
+   }
+}
+
+/***************************************************/
+//sweep the address port to test bits are connected
+void test_addr_bus(void){
+
+   int a = 0;
+   for (a=0;a<5;a++){
+      PORTB = 0x00;  //bus off 
+      PORTB = 0x1;   
+      _delay_ms(50); 
+
+      PORTB = 0x00;  //bus off 
+      PORTB = 0x2;   
+      _delay_ms(50); 
+
+      PORTB = 0x00;  //bus off 
+      PORTB = 0x4;   
+      _delay_ms(50); 
+
+      PORTB = 0x00;  //bus off 
+      PORTB = 0x8;   
+      _delay_ms(50); 
+
+      PORTB = 0x00;  //bus off 
+      PORTB = 0x10;   
+      _delay_ms(50); 
+
+      PORTB = 0x00;  //bus off 
+      PORTB = 0x20;   
+      _delay_ms(50); 
+
+      PORTB = 0x00;  //bus off 
+      PORTB = 0x40;   
+      _delay_ms(50); 
+
+      PORTB = 0x00;  //bus off 
+      PORTB = 0x80;   
+      _delay_ms(50);  
+           
+      PORTB = 0x00;  //bus off 
+   }
+
+
+}
+
+/***************************************************/
+//sweep the address port to test bits are connected
+void test_data_bus(void){
+
+   int a = 0;
+   for (a=0;a<5;a++){
+      PORTD = 0x00;  //bus off 
+      PORTD = 0x1;   
+      _delay_ms(50); 
+
+      PORTD = 0x00;  //bus off 
+      PORTD = 0x2;   
+      _delay_ms(50); 
+
+      PORTD = 0x00;  //bus off 
+      PORTD = 0x4;   
+      _delay_ms(50); 
+
+      PORTD = 0x00;  //bus off 
+      PORTD = 0x8;   
+      _delay_ms(50); 
+
+      PORTD = 0x00;  //bus off 
+      PORTD = 0x10;   
+      _delay_ms(50); 
+
+      PORTD = 0x00;  //bus off 
+      PORTD = 0x20;   
+      _delay_ms(50); 
+
+      PORTD = 0x00;  //bus off 
+      PORTD = 0x40;   
+      _delay_ms(50); 
+
+      PORTD = 0x00;  //bus off 
+      PORTD = 0x80;   
+      _delay_ms(50);  
+           
+      PORTD = 0x00;  //bus off 
+      } 
+}
+
+/***************************************************/
+void setup_sid_voices()
+{
+    //********************** setup SID parameters   *************************
+
+    // SET GLOBAL VOLUME 
+    
+    //wrSID(0b00011000, 0b00001111 );  // (24) 54296, 15  Set maximum Volume
+    //wrSID(0b00011000, 15 );          // (24) 54296, 15  Set maximum Volume
+
+
+ 
+    //********************** Voice 1 parameters   *************************
+      // OSCILLATOR  SETUP
+      wrSID(0b00000000, 0b000000000);    // (0) 54272, 0   -low inital frequency
+      wrSID(0b00000001, 0b000100000);    // (1) 54273, 32  -high inital frequency
+      //Voice1 ADSR *****
+      wrSID(0b00000101, 0b00001001 );    // (5) 54277      -Set Attack/Decay voice 1
+      wrSID(0b00000110, 0b10000000 );    // (6) 54278      -Set Sustain/Release voice 1
+      //**** Voice1 WAVE ENABLE  *****
+      wrSID(0b00000100, 0b00010001 );     // (4) 54276,17   -V1 Triangle waveform and Gate bits 
+      //wrSID(0b00000100, 0b00100001 );       // (4) 54276,33      -V1 Sawtooth waveform and Gate bits 
+      //wrSID(0b00000100, 0b01000001 );     // (4) 54276,65   -V1 Pulse waveform and Gate bits
+      //wrSID(0b00000100,    );             // (4) 54276,128   -V1 Noise waveform and Gate bits
+      // these only work with pulse type?      
+      wrSID(0b00000010, 0b00000010 );     // (2) 54274  - pulse width (l)     
+      wrSID(0b00000011, 0b00001000 );     // (3) 54275  - pulse width (h)
+      //**** V1 ENVELOPE SETUP******** 
+      //**** V1 FILTER SETUP ********* 
+
+    //********************** Voice 2 parameters   *************************
+    
+      wrSID(0b00000111, 0b000000000);    // (7) 54279, 0   -Set inital frequency
+      wrSID(0b00001000, 0b000101000);    // (8) 54280, 40  -Set inital frequency
+      // wrSID(0b00001011, 0b01000001 );    // (11) 54283,65     CR - enable tone by setting waveform
+      wrSID(0b00001100, 0b00001001 );    // (12) 54284     Set Attack/Decay voice 2
+      wrSID(0b00001101, 0b10000000 );    // (13) 54285     Set Sustain/Release voice 2
+      //wrSID(0b00001011, 0b00010001 );  // (11) 54290,17   -V2 Triangle waveform and Gate bits 
+      //wrSID(0b00001011, 0b00100001 );  // (11) 54290,33   -V2 Sawtooth waveform and Gate bits 
+      wrSID(0b00001011, 0b01000001 );    // (11) 54290,65   -V2 Pulse waveform and Gate bits 
+      // these only work with pulse type?
+      wrSID(0b00001001, 0b00000010 );  //(9) 54281   - pulse width (l)
+      wrSID(0b00001010, 0b00001000 );  //(10) 54282  - pulse width (h)
+    
+   
+    //********************** Voice 3 parameters   *************************
+      wrSID(0b00001110, 0b000000000);  // (14) 54286, 0  -Set inital frequency
+      wrSID(0b00001111, 0b000101000);  // (15) 54286, 40  -Set inital frequency
+      //wrSID(0b00010010, 0b01000001 );  // (18) 54290, 65     CR - enable tone by setting pulse ?
+      wrSID(0b00010011, 0b00001001 );  // (19) 54291     Set Attack/Decay voice 3
+      wrSID(0b00010100, 0b10000000 );  // (20) 54292     Set Sustain/Release voice 3
+      //wrSID(0b00010010, 0b00010001 );  // (18) 54290,17   -V2 Triangle waveform and Gate bits 
+      //wrSID(0b00010010, 0b00100001 );  // (18) 54290,33   -V2 Sawtooth waveform and Gate bits 
+      wrSID(0b00010010, 0b01000001 );    // (18) 54290,65   -V2 Pulse waveform and Gate bits 
+      wrSID(0b00010000, 0b00000010 );  //(16) 54280  - pulse width (l)     
+      wrSID(0b00010001, 0b00001000 );  //(17) 54281  - pulse width (h)
+
+
+}
+
+
+/***************************************************/
+
+void poke(uint16_t addr, uint16_t value)
+{
+   //0xD400 == 54272 == SID ADDRESS IN C64 
+
+   //simulate a poke command (use the c64 address to access SID chip)
+
+   if(addr<54272){
+       addr = 54272;
+   }
+   if(addr>54301){
+       addr = 54301;
+   }
+
+   if(value>255){
+       value = 255;
+   }
+
+   uint16_t sidaddr =  (addr - 54272);
+   wrSID( (uint8_t)sidaddr, (uint8_t)value );
+
+}
+
+
+void poketest(void)
+{
+    int S = 54272;
+
+    //clear all 29 registers with poke command 
+    //54301 = 54272+29 registers 
+    for (S=54272;S<54301;S++){
+        poke(S,0);
+    }
+
+    poke(S+1,10);
+    poke(S+5,10);
+    poke(S+15,255);
+    poke(S+24,100); //register 0xD14   - filter resonance 
+    poke(S+4,33);   //register 0xD403
+}
+
+
+void poketest2(void)
+{
+    // 10 FOR L=54272 TO 54296:POKE L,0:NEXT Clears the SID chip
+    // 20 POKE 54296,15  Set maximum volume
+    // 30 POKE 54277,64  Set ATTACK/DECAY
+    // 40 POKE 54273,162:POKE 54272,37 POKE one note in voice 1
+    // 50 PRINT"PRESS ANY KEY" Screen message
+    // 60 GET K$:IF K$="" THEN 60  Check the keyboard
+    // 70 POKE 54276,17:FOR T=1 TO 200:NEXT  Start triangle waveform
+    // 80 POKE 54276,16:FOR T=1 TO 50:NEXT Stop note
+    // 90 GOTO 50
+}
+
+/***************************************************/
+
+int main (void)
+{
+
+
+    enable_timer_isr(); //activate timer interrupt to pulse SID clock pin 
+    init_SID_bus();     //setup AVR ports to send commands to  SID 
+    sid_clear_registers(); //poke 53272+24,0 
+
+    
+    setup_sid_voices();
+    
+    // test_leds();     // alert user we are online and ready to play
+    // //test_addr_bus(); // flash each bit in address bus
+
+    //poketest();
+
+
+
+    //POKE 54296,15
+    //poke(54296,3);
+    wrSID( 24, 3 );
+
+
+    while(1)
+    {
+           //poketest();
+
+           voice1_scale(); //broken 
+           delay();
+           
+           // sweep_pulse_width(); //works!
+           // delay();
+           
+           // sweep_freqency_v1(); //broken
+           // delay();
+
+           //voice2_scale();
+           //delay();
+
+           //voice1_scale();
+           //delay();
+
+
+          // PORTC ^= CLK_PIN; //XOR the system clock when not loading data to chip  
+          // __asm("nop\n\t");
+          // __asm("nop\n\t");
+          // __asm("nop\n\t");
+
+    }
+
+ 
+
+} 
+
+
+
