@@ -25,10 +25,15 @@ What it is:
     python tools - 
 
 
+    useful references 
+          http://www.oxyron.de/html/registers_sid.html
+
+
 
   
 
 More detail:
 
-
+    if you are crazy enough to want to build one yourself: 
+        https://oshpark.com/profiles/klegg
 
