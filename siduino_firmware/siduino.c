@@ -72,36 +72,40 @@ C3 - RGB
   ------------------------------------------------------------------------------------------------
                       7         6         5         4         3        2         1         0     
   ------------------------------------------------------------------------------------------------
-   0  - $D400 (W) FREQLO1                          Channel 1 Frequency Low-Byte
-   1  - $D401 (W) FREQHI1                          Channel 1 Frequency High-Byte
-   2  - $D402 (W) PWLO1                            Channel 1 Pulse Width (PW7-0)
-   3  - $D403 (W) PWHI1                     UNUSED              |       Channel 1 Pulse Width (PW11-8)
-   4  - $D404 (W) CR1     NOISE  |   PULSE  |   SAW  |   TRI    |  TEST  |  RING  |   SYNC  |   GATE
-   5  - $D405 (W) AD1             Channel 1 Attack              |       Channel 1 Decay
-   6  - $D406 (W) SR1             Channel 1 Sustain             |       Channel 1 Release
-   7  - $D407 (W) FREQLO2                          Channel 2 Frequency Low-Byte
-   8  - $D408 (W) FREQHI2                          Channel 2 Frequency High-Byte
-   9  - $D409 (W) PWLO2                            Channel 2 Pulse Width (PW7-0)
-   10 - $D40A (W) PWHI2                     UNUSED              |       Channel 2 Pulse Width (PW11-8)
-   11 - $D40B (W) CR2     NOISE  |   PULSE  |   SAW  |   TRI    |  TEST  |  RING  |   SYNC  |   GATE
-   12 - $D40C (W) AD2             Channel 2 Attack              |       Channel 2 Decay
-   13 - $D40D (W) SR2             Channel 2 Sustain             |       Channel 2 Release
-   14 - $D40E (W) FREQLO3                         Channel 3 Frequency Low-Byte
-   15 - $D40F (W) FREQHI3                         Channel 3 Frequency High-Byte
-   16 - $D410 (W) PWLO3                           Channel 3 Pulse Width (PW7-0)
-   17 - $D411 (W) PWHI3     unused                              | Channel 3 Pulse Width (PW11-8)
-   18 - $D412 (W) CR3     NOISE  |   PULSE  |   SAW  |   TRI    | TEST   |   RING |   SYNC  |   GATE
-   19 - $D413 (W) AD3              Channel 3 Attack             |       Channel 3 Decay
-   20 - $D414 (W) SR3              Channel 3 Sustain            |       Channel 3 Release
-   21 - $D415 (W) FCLO             unused                       |       Filter Cutoff Low (FC2-FC0)
-   22 - $D416 (W) FCHI      Filter Cutoff High (FC10-FC3)
-   23 - $D417 (W) Res/Filt  Filter Resonance  Filt Ex   Filt 3  Filt 2                           Filt 1
-   24 - $D418 (W) Mode/Vol  Ch3Off    HighPass  BandPass  LoPass|             Volume
-   25 - $D419 (R) POTX                        Potentiometer X
-   26 - $D41A (R) POTY                        Potentiometer Y
-   27 - $D41B (R) OSC3                        Channel 3 Oscillator
-   28 - $D41C (R) ENV3                        Channel 3 Envelope
+   0  - $D400 - 54272 - (W) FREQLO1                          Channel 1 Frequency Low-Byte
+   1  - $D401 - 54273 - (W) FREQHI1                          Channel 1 Frequency High-Byte
+   2  - $D402 - 54274 - (W) PWLO1                            Channel 1 Pulse Width (PW7-0)
+   3  - $D403 - 54275 - (W) PWHI1                     UNUSED              |       Channel 1 Pulse Width (PW11-8)
+   4  - $D404 - 54276 - (W) CR1     NOISE  |   PULSE  |   SAW  |   TRI    |  TEST  |  RING  |   SYNC  |   GATE
+   5  - $D405 - 54277 - (W) AD1             Channel 1 Attack              |       Channel 1 Decay
+   6  - $D406 - 54278 - (W) SR1             Channel 1 Sustain             |       Channel 1 Release
+   7  - $D407 - 54279 - (W) FREQLO2                          Channel 2 Frequency Low-Byte
+   8  - $D408 - 54280 - (W) FREQHI2                          Channel 2 Frequency High-Byte
+   9  - $D409 - 54281 - (W) PWLO2                            Channel 2 Pulse Width (PW7-0)
+   10 - $D40A - 54282 - (W) PWHI2                     UNUSED              |       Channel 2 Pulse Width (PW11-8)
+   11 - $D40B - 54283 - (W) CR2     NOISE  |   PULSE  |   SAW  |   TRI    |  TEST  |  RING  |   SYNC  |   GATE
+   12 - $D40C - 54284 - (W) AD2             Channel 2 Attack              |       Channel 2 Decay
+   13 - $D40D - 54285 - (W) SR2             Channel 2 Sustain             |       Channel 2 Release
+   14 - $D40E - 54286 - (W) FREQLO3                         Channel 3 Frequency Low-Byte
+   15 - $D40F - 54287 - (W) FREQHI3                         Channel 3 Frequency High-Byte
+   16 - $D410 - 54288 - (W) PWLO3                           Channel 3 Pulse Width (PW7-0)
+   17 - $D411 - 54289 - (W) PWHI3     unused                              | Channel 3 Pulse Width (PW11-8)
+   18 - $D412 - 54290 - (W) CR3     NOISE  |   PULSE  |   SAW  |   TRI    | TEST   |   RING |   SYNC  |   GATE
+   19 - $D413 - 54291 - (W) AD3              Channel 3 Attack             |       Channel 3 Decay
+   20 - $D414 - 54292 - (W) SR3              Channel 3 Sustain            |       Channel 3 Release
+   21 - $D415 - 54293 - (W) FCLO             unused                       |       Filter Cutoff Low (FC2-FC0)
+   22 - $D416 - 54294 - (W) FCHI      Filter Cutoff High (FC10-FC3)
+   23 - $D417 - 54295 - (W) Res/Filt  Filter Resonance  Filt Ex   Filt 3  Filt 2                           Filt 1
+   24 - $D418 - 54296 - (W) Mode/Vol  Ch3Off    HighPass  BandPass  LoPass|             Volume
+   25 - $D419 - 54297 - (R) POTX                        Potentiometer X
+   26 - $D41A - 54298 - (R) POTY                        Potentiometer Y
+   27 - $D41B - 54299 - (R) OSC3                        Channel 3 Oscillator
+   28 - $D41C - 54300 - (R) ENV3                        Channel 3 Envelope
   ------------------------------------------------------------------------------------------------
+
+   The GATE bit controls the Envelope Generator. When this bit is set to 1, it triggers the Envelope Generator 
+   and the ATTACK/DECAY/SUSTAIN cycle begins. When the bit is reset to zero, the RELEASE cycle begins. 
+   Setting bits 4,5 or 6 to 1 selects that particular waveform.
 
 */
 
@@ -453,7 +457,7 @@ void setup_sid_voices()
  
     //********************** Voice 1 parameters   *************************
       // OSCILLATOR  SETUP
-      wrSID(0b00000000, 0b000000000);    // (0) 54272, 0   -low inital frequency
+      wrSID(0b00000000, 0b000000000);    // (0) 54272, 0   -low  inital frequency
       wrSID(0b00000001, 0b000100000);    // (1) 54273, 32  -high inital frequency
       //Voice1 ADSR *****
       wrSID(0b00000101, 0b00001001 );    // (5) 54277      -Set Attack/Decay voice 1
@@ -511,8 +515,8 @@ void poke(uint16_t addr, uint16_t value)
    if(addr<54272){
        addr = 54272;
    }
-   if(addr>54301){
-       addr = 54301;
+   if(addr>54300){
+       addr = 54300;
    }
 
    if(value>255){
@@ -531,7 +535,7 @@ void poketest(void)
 
     //clear all 29 registers with poke command 
     //54301 = 54272+29 registers 
-    for (S=54272;S<54301;S++){
+    for (S=54272;S<54300;S++){
         poke(S,0);
     }
 
@@ -554,6 +558,31 @@ void poketest2(void)
     // 70 POKE 54276,17:FOR T=1 TO 200:NEXT  Start triangle waveform
     // 80 POKE 54276,16:FOR T=1 TO 50:NEXT Stop note
     // 90 GOTO 50
+
+    //translates to: 
+    poke( 54296 ,15  );  //  Set maximum volume
+    
+    poke( 54277 , 240  );  //  Set ATTACK/DECAY
+    poke( 54278 , 240  );  //  Set SUSTAIN/RELEASE
+
+    poke( 54273 , 162 );   //
+    poke( 54272 , 137  );  // POKE one note in voice 1
+    
+    //poke( 54274 , 203  ); //pulse width 
+    //poke( 54276 ,65  );   //choose pulse type and set gate bit (first bit is gate 0x1)
+    //     wrSID(4,65  );   //same poke, expressed as a direct register write 
+
+
+    poke( 54274 , 203  );  // pulse width 
+    poke( 54276 , 17  );   // choose pulse type and set gate bit (first bit is gate 0x1)
+
+    //poke( 54276 ,65  ); 
+    //wrSID(4,65);
+
+    delay();
+    delay();
+    poke( 54276 ,16  );  // Stop note
+
 }
 
 /***************************************************/
@@ -567,26 +596,19 @@ int main (void)
     sid_clear_registers(); //poke 53272+24,0 
 
     
-    setup_sid_voices();
+    //setup_sid_voices();
     
     // test_leds();     // alert user we are online and ready to play
     // //test_addr_bus(); // flash each bit in address bus
 
-    //poketest();
-
-
-
-    //POKE 54296,15
-    //poke(54296,3);
-    wrSID( 24, 3 );
-
+    poketest2();
 
     while(1)
     {
            //poketest();
 
-           voice1_scale(); //broken 
-           delay();
+           // voice1_scale(); //broken 
+           // delay();
            
            // sweep_pulse_width(); //works!
            // delay();
@@ -599,6 +621,7 @@ int main (void)
 
            //voice1_scale();
            //delay();
+    
 
 
           // PORTC ^= CLK_PIN; //XOR the system clock when not loading data to chip  
