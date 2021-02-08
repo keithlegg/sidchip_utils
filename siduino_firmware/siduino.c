@@ -559,29 +559,39 @@ void poketest2(void)
     // 80 POKE 54276,16:FOR T=1 TO 50:NEXT Stop note
     // 90 GOTO 50
 
-    //translates to: 
-    poke( 54296 ,15  );  //  Set maximum volume
-    
+
+    // VOICE1 //-------------------------------------------- 
+    poke( 54296 ,15  );    //  Set maximum volume
     poke( 54277 , 240  );  //  Set ATTACK/DECAY
     poke( 54278 , 240  );  //  Set SUSTAIN/RELEASE
-
-    poke( 54273 , 162 );   //
-    poke( 54272 , 137  );  // POKE one note in voice 1
+    poke( 54273 , 50 );   //
+    poke( 54272 , 0  );  // POKE one note in voice 1
+    poke( 54274 , 203  ); //pulse width 
+    poke( 54276 ,65  );   //choose pulse type and set gate bit (first bit is gate 0x1)
+    // //  wrSID(4,65  );   //same poke, expressed as a direct register write 
     
-    //poke( 54274 , 203  ); //pulse width 
-    //poke( 54276 ,65  );   //choose pulse type and set gate bit (first bit is gate 0x1)
-    //     wrSID(4,65  );   //same poke, expressed as a direct register write 
+    // VOICE2 //--------------------------------------------
+    poke( 54296 ,15  );    //  Set maximum volume
+    poke( 54285 , 240  );  //  Set SUSTAIN/RELEASE
+    poke( 54284 , 240  );  //  Set ATTACK/DECAY
+    poke( 54280 , 162 );   //    
+    poke( 54279 , 100  );  // POKE one note in voice 1
+    poke( 54281 , 0  );   // pulse width 
+    poke( 54282 , 50  );   // pulse width 
+    poke( 54283 , 33  );   // choose pulse type and set gate bit (first bit is gate 0x1)
 
+    // VOICE3 //--------------------------------------------
+    poke( 54296 ,15  );    //  Set maximum volume
+    poke( 54291 , 240  );  //  Set ATTACK/DECAY
+    poke( 54292 , 240  );  //  Set SUSTAIN/RELEASE
+    poke( 54286 , 0  );  // POKE one note in voice 1
+    poke( 54287 , 255 );   //
+    poke( 54288 , 203  );  //pulse width 
+    poke( 54290 , 65  );   // choose pulse type and set gate bit (first bit is gate 0x1)
 
-    poke( 54274 , 203  );  // pulse width 
-    poke( 54276 , 17  );   // choose pulse type and set gate bit (first bit is gate 0x1)
-
-    //poke( 54276 ,65  ); 
-    //wrSID(4,65);
-
-    delay();
-    delay();
-    poke( 54276 ,16  );  // Stop note
+    // poke(54276,16); //stop voice1
+    // poke(54283,16); //stop voice2
+    // poke(54290,16); //stop voice3
 
 }
 
@@ -601,15 +611,18 @@ int main (void)
     // test_leds();     // alert user we are online and ready to play
     // //test_addr_bus(); // flash each bit in address bus
 
-    poketest2();
+    //poketest2();
 
     while(1)
     {
+          
+
+
            //poketest();
 
            // voice1_scale(); //broken 
            // delay();
-           
+
            // sweep_pulse_width(); //works!
            // delay();
            
@@ -623,11 +636,6 @@ int main (void)
            //delay();
     
 
-
-          // PORTC ^= CLK_PIN; //XOR the system clock when not loading data to chip  
-          // __asm("nop\n\t");
-          // __asm("nop\n\t");
-          // __asm("nop\n\t");
 
     }
 
