@@ -531,24 +531,6 @@ void poke(uint16_t addr, uint16_t value)
 
 void poketest(void)
 {
-    int S = 54272;
-
-    //clear all 29 registers with poke command 
-    //54301 = 54272+29 registers 
-    for (S=54272;S<54300;S++){
-        poke(S,0);
-    }
-
-    poke(S+1,10);
-    poke(S+5,10);
-    poke(S+15,255);
-    poke(S+24,100); //register 0xD14   - filter resonance 
-    poke(S+4,33);   //register 0xD403
-}
-
-
-void poketest2(void)
-{
     // 10 FOR L=54272 TO 54296:POKE L,0:NEXT Clears the SID chip
     // 20 POKE 54296,15  Set maximum volume
     // 30 POKE 54277,64  Set ATTACK/DECAY
@@ -595,6 +577,79 @@ void poketest2(void)
 
 }
 
+void poketest2(void)
+{
+
+    // VOICE1 //-------------------------------------------- 
+    poke( 54296 ,15  );    //  Set maximum volume
+    poke( 54277 , 240  );  //  Set ATTACK/DECAY
+    poke( 54278 , 240  );  //  Set SUSTAIN/RELEASE
+    
+    poke( 54273 , 100 );   //
+    poke( 54272 , 0  );  // POKE one note in voice 1
+    
+    poke( 54274 , 103  ); //pulse width 
+    poke( 54276 ,65  );   //choose pulse type and set gate bit (first bit is gate 0x1)
+    // //  wrSID(4,65  );   //same poke, expressed as a direct register write 
+
+    poke( 54293 , 100  );   // filter width
+    poke( 54295 , 100  );    // filter width
+
+    uint16_t z = 0;
+
+    while(1){
+        for (z=0;z<50;z++)
+        {
+           poke( 54295 , z  );    // filter resonance
+        }
+    }
+}
+
+/***************************************************/
+
+/*
+   example to set a note across two 8 bit registers from a single 16 bit number 
+   splits a 16 bit into two 8 bits 
+*/
+void voice_one_note(uint16_t note)
+{
+    //we really want 8 bit, but poke only accepts 16 cast to 8 
+    uint16_t high  = ((uint16_t)note >> 0) & 0xFF;  // shift by 0 not needed, of course, just stylistic
+    uint16_t low   = ((uint16_t)note >> 8) & 0xFF;
+    poke( 54272 , low  );  // POKE one note in voice 1
+    poke( 54273 , high );  //
+
+    // you can do the same thing with 8 bit if you dont use poke() 
+    // uint8_t high  = ((uint8_t)note >> 0) & 0xFF;  // shift by 0 not needed, of course, just stylistic
+    // uint8_t low   = ((uint8_t)note >> 8) & 0xFF;
+    // wrSID( 0 , low  );  
+    // wrSID( 1 , high ); 
+
+}
+
+void test_notecmd(void)
+{
+    poke( 54296 ,15  );    //  Set maximum volume
+    poke( 54277 , 240  );  //  Set ATTACK/DECAY
+    poke( 54278 , 240  );  //  Set SUSTAIN/RELEASE
+    poke( 54273 , 50 );   //
+    poke( 54272 , 100  );  // POKE one note in voice 1
+    poke( 54274 , 203  ); //pulse width 
+    poke( 54276 ,65  );   //choose pulse type and set gate bit (first bit is gate 0x1)
+    uint16_t x = 0;
+
+    while(1)
+    {
+        for(x=0;x<255;x++){
+            voice_one_note(x);
+            delay();
+        }
+        for(x=255;x>0;x--){
+            voice_one_note(x);
+            delay();
+        }
+    }
+}
 /***************************************************/
 
 int main (void)
@@ -611,33 +666,24 @@ int main (void)
     // test_leds();     // alert user we are online and ready to play
     // //test_addr_bus(); // flash each bit in address bus
 
-    //poketest2();
 
-    while(1)
-    {
-          
+   // voice1_scale(); //broken 
+   // delay();
 
+   // sweep_pulse_width(); //works!
+   // delay();
+   
+   // sweep_freqency_v1(); //broken
+   // delay();
 
-           //poketest();
+   //voice2_scale();
+   //delay();
 
-           // voice1_scale(); //broken 
-           // delay();
-
-           // sweep_pulse_width(); //works!
-           // delay();
-           
-           // sweep_freqency_v1(); //broken
-           // delay();
-
-           //voice2_scale();
-           //delay();
-
-           //voice1_scale();
-           //delay();
+   //voice1_scale();
+   //delay();
+     
     
 
-
-    }
 
  
 
