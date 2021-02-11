@@ -340,7 +340,8 @@ void sweep_pulse_width()
 void test_leds(void){
 
    int a = 0;
-   for (a=0;a<5;a++){
+   for (a=0;a<5;a++)
+   {
       PORTC &= ~(0x38);;  //all LEDS off (pc3,pc4,pc5) 
       PORTC |= (0x8); //pc3 on - green  
       _delay_ms(10); 
@@ -666,6 +667,8 @@ int main (void)
     // test_leds();     // alert user we are online and ready to play
     // //test_addr_bus(); // flash each bit in address bus
 
+
+   test_leds();
 
    // voice1_scale(); //broken 
    // delay();
