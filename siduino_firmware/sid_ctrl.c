@@ -209,7 +209,7 @@ void init_SID_bus()
 // interrupt section 
 // we use a timer/interrupt to genrate a 1Mhz clock pulse when the SID is not recieveing a command 
 
-
+/*
 void enable_timer_isr()
 {
   // This sets up an 8 bit timer0 overflow
@@ -227,6 +227,7 @@ ISR ( TIMER0_OVF_vect )
         PORTC ^= CLK_PIN; //XOR the system clock when not loading data to chip      
     }
 }
+*/
 
 /***************/
 

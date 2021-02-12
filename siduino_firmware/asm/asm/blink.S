@@ -10,7 +10,7 @@
 
 #define accum r16
 
-#define temp r17
+#define temp r19
 #define overflows r18
 
 .global main               // Main entry point
@@ -19,9 +19,6 @@
 //-----------------------
 
 main:
-   // ldi      accum, 0xff     
-   // sts      DDRC,  accum   
-
    ldi      accum, 0xff  
    out      DDRC,  accum
 
@@ -31,14 +28,15 @@ main:
    ldi      accum, LO(RAMEND)
    out      SPL,   accum
 
+   rcall   reset
    rjmp    blink
 
 
  
 
 reset: 
-   ldi temp,  0x05
-   out TCCR0B, temp      ; set the Clock Selector Bits CS00, CS01, CS02 to 101
+   ldi temp,  0b00000101
+   out TCCR0B, temp      ; set the Clock Selector Bits CS00, CS01, CS02 to 101 (0x05)
                          ; this puts Timer Counter0, TCNT0 in to FCPU/1024 mode
                          ; so it ticks at the CPU freq/1024
    ldi temp, 0b00000001
@@ -56,9 +54,12 @@ reset:
 
 
 blink:
-   sbi PORTC, 4          ; turn on LED on  
+   ldi r17, 0xff
+   out PORTC, r17          ; turn on LED on  
    rcall delay           ; delay will be 1/2 second
-   cbi PORTC, 4          ; turn off LED on  
+
+   ldi r17, 0x00
+   out PORTC, r17          ; turn off LED on  
    rcall delay           ; delay will be 1/2 second
    rjmp blink            ; loop back to the start
   
@@ -73,7 +74,7 @@ overflow_handler:
    inc overflows         ; add 1 to the overflows variable
    cpi overflows, 61     ; compare with 61
    //brne PC+2             ; Program Counter + 2 (skip next line) if not equal
-   breq .+2                ; above line fixed 
+   brne .+2                ; above line fixed 
    clr overflows         ; if 61 overflows occured reset the counter to zero
    reti                  ; return from interrupt
 

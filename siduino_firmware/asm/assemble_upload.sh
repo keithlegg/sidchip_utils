@@ -32,7 +32,7 @@ avrdude -V -c usbtiny -p atmega328p -b 19200 -U flash:w:sidfirmware.hex
 #avrdude -P $(PORT) -v -p $(PROG_MMCU) -c $(PROGRAMMER) -U lfuse:w:$(LOW_FUSE):m -U hfuse:w:$(HIGH_FUSE):m -U efuse:w:$(EXT_FUSE):m
 
 
-# #CLEAN UP NOW
-# rm -f *.o
-# rm -f *.hex
+#CLEAN UP NOW
+rm -f *.o
+rm -f *.hex
 
