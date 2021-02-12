@@ -49,7 +49,7 @@ void SIDdelay()
 void delay() 
 {
   unsigned char i;
-  for(i=0;i<100;i++) {
+  for(i=0;i<200;i++) {
      SIDdelay();
   }
 }
@@ -58,7 +58,7 @@ void longdelay()
 {
   unsigned char j;
  
-  for(j=0;j<155;j++) {
+  for(j=0;j<15;j++) {
       delay();
   }
  
@@ -67,7 +67,159 @@ void longdelay()
 
 /***************************************************************************/
 
+void sweep(void)
+{
+    int x = 0;
+    for (x=30;x<100;x++) // Loop forever 
+    { 
+        while ((UCSR0A & (1 << UDRE0)) == 0) {}; 
+        UDR0 = x;
 
+        while ((UCSR0A & (1 << UDRE0)) == 0) {}; 
+        UDR0 = 0x40;
+        
+        longdelay();
+    }
+
+    for (x=100;x>30;x--) // Loop forever 
+    { 
+        while ((UCSR0A & (1 << UDRE0)) == 0) {}; 
+        UDR0 = x;
+
+        while ((UCSR0A & (1 << UDRE0)) == 0) {}; 
+        UDR0 = 0x40;
+        
+        longdelay();
+    }
+}
+
+/***************************************************************************/
+
+
+void pattern1(void)
+{
+    int x = 0;
+ 
+    while ((UCSR0A & (1 << UDRE0)) == 0) {}; 
+    UDR0 = 0x24;
+    while ((UCSR0A & (1 << UDRE0)) == 0) {}; 
+    UDR0 = 0x40;
+    longdelay();
+ 
+    while ((UCSR0A & (1 << UDRE0)) == 0) {}; 
+    UDR0 = 0x34;
+    while ((UCSR0A & (1 << UDRE0)) == 0) {}; 
+    UDR0 = 0x40;
+    longdelay();
+
+    while ((UCSR0A & (1 << UDRE0)) == 0) {}; 
+    UDR0 = 0x48;
+    while ((UCSR0A & (1 << UDRE0)) == 0) {}; 
+    UDR0 = 0x40;
+    longdelay();
+
+    while ((UCSR0A & (1 << UDRE0)) == 0) {}; 
+    UDR0 = 0x32;
+    while ((UCSR0A & (1 << UDRE0)) == 0) {}; 
+    UDR0 = 0x40;
+    longdelay();
+ 
+}
+
+/***************************************************************************/
+
+void pattern2(void)
+{
+    int x = 0;
+ 
+    while ((UCSR0A & (1 << UDRE0)) == 0) {}; 
+    UDR0 = 0x28;
+    while ((UCSR0A & (1 << UDRE0)) == 0) {}; 
+    UDR0 = 0x40;
+    longdelay();
+ 
+    while ((UCSR0A & (1 << UDRE0)) == 0) {}; 
+    UDR0 = 0x17;
+    while ((UCSR0A & (1 << UDRE0)) == 0) {}; 
+    UDR0 = 0x40;
+    longdelay();
+
+    while ((UCSR0A & (1 << UDRE0)) == 0) {}; 
+    UDR0 = 0x38;
+    while ((UCSR0A & (1 << UDRE0)) == 0) {}; 
+    UDR0 = 0x40;
+    longdelay();
+
+    while ((UCSR0A & (1 << UDRE0)) == 0) {}; 
+    UDR0 = 0x42;
+    while ((UCSR0A & (1 << UDRE0)) == 0) {}; 
+    UDR0 = 0x40;
+    longdelay();
+ 
+}
+
+void sillysong(void)
+{
+    while ((UCSR0A & (1 << UDRE0)) == 0) {}; 
+    UDR0 = 0x90;
+    while ((UCSR0A & (1 << UDRE0)) == 0) {}; 
+    UDR0 = 0x32;
+    while ((UCSR0A & (1 << UDRE0)) == 0) {}; 
+    UDR0 = 0x40;
+
+    int z = 0;
+    for (z=0;z<6;z++)    
+    {
+        pattern1();
+    } 
+    for (z=0;z<6;z++)    
+    {
+        pattern2();
+    } 
+
+}
+
+
+void polyphonic()
+{
+    while ((UCSR0A & (1 << UDRE0)) == 0) {}; 
+    UDR0 = 0x90;
+    while ((UCSR0A & (1 << UDRE0)) == 0) {}; 
+    UDR0 = 0x32;
+    while ((UCSR0A & (1 << UDRE0)) == 0) {}; 
+    UDR0 = 0x40;
+
+    while ((UCSR0A & (1 << UDRE0)) == 0) {}; 
+    UDR0 = 0x90;
+    while ((UCSR0A & (1 << UDRE0)) == 0) {}; 
+    UDR0 = 0x42;
+    while ((UCSR0A & (1 << UDRE0)) == 0) {}; 
+    UDR0 = 0x40;
+
+    longdelay();
+
+    while ((UCSR0A & (1 << UDRE0)) == 0) {}; 
+    UDR0 = 0x80;
+    while ((UCSR0A & (1 << UDRE0)) == 0) {}; 
+    UDR0 = 0x42;
+    while ((UCSR0A & (1 << UDRE0)) == 0) {}; 
+    UDR0 = 0x00;
+
+
+    longdelay();
+
+    while ((UCSR0A & (1 << UDRE0)) == 0) {}; 
+    UDR0 = 0x80;
+    while ((UCSR0A & (1 << UDRE0)) == 0) {}; 
+    UDR0 = 0x32;
+    while ((UCSR0A & (1 << UDRE0)) == 0) {}; 
+    UDR0 = 0x00;
+
+    delay();
+
+
+}
+/***************************************************************************/
 
 
 int main (void) 
@@ -81,21 +233,13 @@ int main (void)
    UBRR0H = (BAUD_PRESCALE >> 8); // Load upper 8-bits of the baud rate value into the high byte of the UBRR register 
    UBRR0L = BAUD_PRESCALE; // Load lower 8-bits of the baud rate value into the low byte of the UBRR register 
 
+
    for (;;) // Loop forever 
    { 
-      PORTC  = 1;
-      while ((UCSR0A & (1 << UDRE0)) == 0) {}; 
-      UDR0 = 0x90;
 
-      PORTC  = 0; 
-      while ((UCSR0A & (1 << UDRE0)) == 0) {}; 
-      UDR0 = 0x24; 
-      while ((UCSR0A & (1 << UDRE0)) == 0) {}; 
-      UDR0 = 0x40;
-
-      longdelay();
-
-
+       //polyphonic();
+       
+       sillysong();
    }    
 
    return 1;
