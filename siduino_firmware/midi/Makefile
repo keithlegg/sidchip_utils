@@ -5,7 +5,8 @@ PROJECT=midi
 ###########################
 
  
-SOURCES=midi.c
+#SOURCES=midi_tx.c
+SOURCES=midi_rx.c
 
 
 ###########################

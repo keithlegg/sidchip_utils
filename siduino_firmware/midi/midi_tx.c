@@ -31,6 +31,13 @@
 	0x60 - key channel 0  
 	0x00 - velocity zero is same as off 
 
+    -------------------------------
+
+    midi - wiring - SHOULD go through an optoisolator, but will work without 
+        - data is on one line (should go through low ohm resistor, works without) 
+        - other line is high 5V
+        - middle pin is ground 
+
 */
 
 /***************************************************************************/

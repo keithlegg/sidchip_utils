@@ -231,7 +231,7 @@ ISR ( TIMER0_OVF_vect )
 
 /***************/
 
-/*
+ 
 void enable_timer_isr()
 {
     TCCR1B |= (1 << WGM12 ) ;  // Configure timer 1 for CTC mode
@@ -249,7 +249,7 @@ ISR ( TIMER1_COMPA_vect )
         PORTC ^= CLK_PIN; //XOR the system clock when not loading data to chip      
     }
 }
-*/
+ 
 
 /************************************************************/
 /************************************************************/

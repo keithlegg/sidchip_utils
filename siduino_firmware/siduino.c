@@ -658,12 +658,12 @@ int main (void)
 {
 
 
-    //enable_timer_isr(); //activate timer interrupt to pulse SID clock pin 
+    enable_timer_isr(); //activate timer interrupt to pulse SID clock pin 
     init_SID_bus();     //setup AVR ports to send commands to  SID 
     sid_clear_registers(); //poke 53272+24,0 
 
     
-    //setup_sid_voices();
+    setup_sid_voices();
     
     // test_leds();     // alert user we are online and ready to play
     //test_addr_bus(); // flash each bit in address bus
@@ -671,28 +671,7 @@ int main (void)
    while(1)
    {
 
-
-   //test_leds();
-
-      //voice1_scale(); //broken 
-      //delay();
-
-   // sweep_pulse_width(); //works!
-   // delay();
-   
-   // sweep_freqency_v1(); //broken
-   // delay();
-
-   //voice2_scale();
-   //delay();
-
-   //voice1_scale();
-   //delay();
-     
-       if(!running)
-       {
-           PORTC ^= CLK_PIN; //XOR the system clock when not loading data to chip      
-       }
+       test_notecmd();
        
    }
 
