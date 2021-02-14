@@ -16,22 +16,57 @@ unsigned char USART_ReceiveByte(void);
 void USART_TransmitByte(unsigned char);
 void delay_ms(uint16_t x); // general purpose delay
 
+#define sbi(a, b) (a) |= (1 << (b))
+#define cbi(a, b) (a) &= ~(1 << (b))
 
 
-void print_byte( uint8_t data){
-   uint8_t i = 0;
-
-   for (i=0; i<=7; i++) {
-       //if ( !!(data & (1 << ii)) ){  // LSB
-       if ( !!(data & (1 << (7 - i))) ){  // MSB
-           PORTC = 0x08; //OFF
-       }else{
-           PORTC = 0x00; //ON
-       }
-       delay_ms(200);
+/*
+//draw a byte with two pins to look at with logic analyzer
+void blink_byte_msb(uint8_t data)
+{
+    uint8_t i = 0;
+    for (i=0; i<=7; i++) 
+    {
+        PORTB ^= _BV(3);   
+        //if ( !!(data & (1 << ii)) ){  // LSB
+        if ( !!(data & (1 << (7 - i))) ){  // MSB
+            PORTC = 0x08; //ON
+            sbi(PORTB, 4); 
+        }else{
+            PORTC = 0x00; //OFF
+            cbi(PORTB, 4); 
+        }
+        PORTB ^= _BV(3);   
+        delay_ms(10);
     }
-}
 
+    cbi(PORTB, 4); //leave data "off" 
+
+}
+*/
+
+//draw a byte with two pins to look at with logic analyzer
+void blink_byte_lsb(uint8_t data)
+{
+    uint8_t i = 0;
+    for (i=0; i<=7; i++) 
+    {
+        PORTB ^= _BV(3);   
+        //if ( !!(data & (1 << ii)) ){  // LSB
+        if ( !!(data & (1 << (7 - i))) ){  // MSB
+            PORTC = 0x08; //ON
+            sbi(PORTB, 4); 
+        }else{
+            PORTC = 0x00; //OFF
+            cbi(PORTB, 4); 
+        }
+        PORTB ^= _BV(3);   
+        delay_ms(10);
+    }
+
+    cbi(PORTB, 4); //leave data "off" 
+
+}
 
 
 
@@ -56,22 +91,46 @@ int main(void)
     // PORTC = 0b0000;
       
 
-    //PORTC = 0x08;
+    // blink_byte_lsb(0xff);
+    // blink_byte_lsb(0xaa);
+    // blink_byte_lsb(0x55);
+    // blink_byte_lsb(0xf0);
+    // blink_byte_lsb(0x0f);
 
-    print_byte(0xaa);
 
+    
     for(;;)
     {
        
         uint8_t byte = USART_ReceiveByte();
         if( byte !=0 )
         {
-            print_byte(byte);
+            // blink_byte_lsb(byte);
+            // PORTB = 0x00;
+            // PORTC = 0x00;
+            // delay_ms(20);
+            
+            if(byte==0x24)
+            {
+                blink_byte_lsb(0xff);
+            }   
+            
+            if(byte==0x26)
+            {
+                blink_byte_lsb(0x0f);
+            } 
+
+            if(byte==0x28)
+            {
+                blink_byte_lsb(0xf0);
+            } 
+
         }
-         
-        
+      
     }
-    
+  
+
+
     return 0;   /* never reached */
 }
 
