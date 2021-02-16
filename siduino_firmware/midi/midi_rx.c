@@ -1,5 +1,4 @@
 #include <avr/io.h>
-#include <util/delay.h>
 #include <avr/interrupt.h>
 
 // #define BAUD_PRESCALE (((F_CPU / (USART_BAUDRATE * 16UL))) - 1) 
@@ -9,6 +8,10 @@
 #define BAUD 31250          // 31.250 KBaud is Baud Rate or Bit Rate
 #define MYUBRR 31           // UART Baud Rate Register (UBRR) = (F_CPU/16/BAUD)-1
 
+
+#define PWM_PIN 0x04 //PORTC
+#define RW_PIN 0x02  //PORTC
+#define CS_PIN 0x01  //PORTC
 
 int set_PORTC_bit(unsigned int, unsigned int);
 void USART_Init(unsigned int);
@@ -70,14 +73,48 @@ void blink_byte_lsb(uint8_t data)
 
 
 
+
+
+/************************************************************/
+/************************************************************/
+// interrupt section 
+ 
+//use interrupt to setup SID clock pin as an audio source  
+void enable_audio_isr()
+{
+    TCCR1B |= (1 << WGM12 ) ;  // Configure timer 1 for CTC mode
+    TIMSK1 |= (1 << OCIE1A ) ; // Enable CTC interrupt
+    sei();       //Enable global interrupts
+    OCR1A = 0;    // Set CTC compare value - use to set tone of sound/delay 
+    TCCR1A |= (1 << COM1A0);   // Toggle OC1A on Compare Match.
+    
+    TCCR1B |= (1 << CS10);     // clock on 
+    TCCR1B |= (1 << CS12);     // clock on 
+
+}
+
+ISR ( TIMER1_COMPA_vect )
+{
+    PORTC ^= PWM_PIN; //XOR the system clock when not loading data to chip      
+}
+
+
+ 
+/************************************************************/
+/************************************************************/
+
+
+
 int main(void)
 {
     
     USART_Init(MYUBRR);
 
     //DDRB = 0b11101111;    //PB4 = MISO 
-    DDRC = 0xFF;            //this sets all bits/pins on Port C as outputs    
-    //DDRD = 0b00111110;    //PORTD (RX on PD0)
+
+
+    DDRC = 0xff;
+
         
     //Startup Test Sequence
     // PORTC = 0b0001;
@@ -91,12 +128,13 @@ int main(void)
     // PORTC = 0b0000;
       
 
-    // blink_byte_lsb(0xff);
-    // blink_byte_lsb(0xaa);
+    //blink_byte_lsb(0xff);
+     blink_byte_lsb(0xaa);
     // blink_byte_lsb(0x55);
     // blink_byte_lsb(0xf0);
     // blink_byte_lsb(0x0f);
 
+    //enable_audio_isr();
 
     
     for(;;)
@@ -105,25 +143,70 @@ int main(void)
         uint8_t byte = USART_ReceiveByte();
         if( byte !=0 )
         {
+            PORTC = 0x10; //ON
+            delay_ms(1);
+            PORTC = 0x00; //OFF
+
             // blink_byte_lsb(byte);
             // PORTB = 0x00;
             // PORTC = 0x00;
             // delay_ms(20);
             
-            if(byte==0x24)
+            if(byte==0x90)
             {
-                blink_byte_lsb(0xff);
+                // blink_byte_lsb(0xf0);
+
             }   
             
+            //OCR1A = (uint8_t) byte/3;
+
+            /*
+            //AUDIO OUT TEST 
+            if(byte==0x24)
+            {
+                OCR1A = 10;
+            } 
+            if(byte==0x25)
+            {
+                OCR1A = 9;
+            } 
+
             if(byte==0x26)
+            {
+                OCR1A = 8;
+            } 
+            if(byte==0x27)
+            {
+                OCR1A = 7;
+            } 
+            if(byte==0x28)
+            {
+                OCR1A = 6;                
+            }  
+            */
+
+            //BLINK OUT TEST 
+            if(byte==0x24)
+            {
+                blink_byte_lsb(0x0f);
+            } 
+            if(byte==0x25)
             {
                 blink_byte_lsb(0x0f);
             } 
 
+            if(byte==0x26)
+            {
+                blink_byte_lsb(0xaa);
+            } 
+            if(byte==0x27)
+            {
+                blink_byte_lsb(0xaa);
+            } 
             if(byte==0x28)
             {
-                blink_byte_lsb(0xf0);
-            } 
+                blink_byte_lsb(0x55);
+            }  
 
         }
       
