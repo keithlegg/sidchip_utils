@@ -293,7 +293,7 @@ void voice2_scale()
 
 void sweep_freqency_v1()
 {
-    int delay = 10;//ms 
+    int delay = 5;
     int steps = 255;
 
     wrSID(0b00011000, 0b00001111 ); // Set maximum Volume
@@ -301,9 +301,21 @@ void sweep_freqency_v1()
     //wrSID(0b00000100, 0b00010001 );// 54276,17      - triangle wave
     wrSID(4, 17 );// 54276,17      - triangle wave
 
+    int x,y = 0;
+
+    //DEBUG does not work 
+    //for (x = 0;x<steps;x++)
+    //{
+    //    for (y= 0;y<steps;y++)
+    //    {
+    //      poke(0,y);poke(1,x);
+    //      _delay_ms(delay); 
+    //    }
+    //}
+
     for (int x= 0;x<steps;x++)
     {
-      wrSID(1,x);
+      wrSID(1,x);//1 is HIGH register (zero indexed) 
       _delay_ms(delay); 
     }
       
@@ -312,9 +324,9 @@ void sweep_freqency_v1()
 
 /***************************************************/
 
-void sweep_pulse_width()
+void sweep_pulse_width_v1()
 {
-    int delay = 100;//ms 
+    int delay = 20;//ms 
     int steps = 255;
 
     wrSID(0b00011000, 0b00001111 ); // Set maximum Volume
@@ -448,87 +460,65 @@ void test_data_bus(void){
 /***************************************************/
 void setup_sid_voices()
 {
-    //********************** setup SID parameters   *************************
 
+    // 17= TRIANGLE , 33= SAW, 65= PULSE, 129= NOISE 
+
+    //********************** setup SID parameters   *************************
     // SET GLOBAL VOLUME 
     
-    //wrSID(0b00011000, 0b00001111 );  // (24) 54296, 15  Set maximum Volume
-    //wrSID(0b00011000, 15 );          // (24) 54296, 15  Set maximum Volume
-
-
+    //wrSID(0b00011000, 0b00001111 );       // (24) 54296, 15  Set maximum Volume
+    //wrSID(0b00011000, 15 );               // (24) 54296, 15  Set maximum Volume
  
     //********************** Voice 1 parameters   *************************
       // OSCILLATOR  SETUP
-      wrSID(0b00000000, 0b000000000);    // (0) 54272, 0   -low  inital frequency
-      wrSID(0b00000001, 0b000100000);    // (1) 54273, 32  -high inital frequency
+      wrSID(0b00000000, 0b000000000);       // (0) 54272, 0    - low  inital frequency
+      wrSID(0b00000001, 0b000100000);       // (1) 54273, 32   - high inital frequency
       //Voice1 ADSR *****
-      wrSID(0b00000101, 0b00001001 );    // (5) 54277      -Set Attack/Decay voice 1
-      wrSID(0b00000110, 0b10000000 );    // (6) 54278      -Set Sustain/Release voice 1
+      wrSID(0b00000101, 0b00001001 );       // (5) 54277       - Set Attack/Decay voice 1
+      wrSID(0b00000110, 0b10000000 );       // (6) 54278       - Set Sustain/Release voice 1
       //**** Voice1 WAVE ENABLE  *****
-      wrSID(0b00000100, 0b00010001 );     // (4) 54276,17   -V1 Triangle waveform and Gate bits 
-      //wrSID(0b00000100, 0b00100001 );       // (4) 54276,33      -V1 Sawtooth waveform and Gate bits 
-      //wrSID(0b00000100, 0b01000001 );     // (4) 54276,65   -V1 Pulse waveform and Gate bits
-      //wrSID(0b00000100,    );             // (4) 54276,128   -V1 Noise waveform and Gate bits
+      wrSID(0b00000100, 0b00010001 );       // (4) 54276,17    - V1 Triangle waveform and Gate bits 
+      //wrSID(0b00000100, 0b00100001 );     // (4) 54276,33    - V1 Sawtooth waveform and Gate bits 
+      //wrSID(0b00000100, 0b01000001 );     // (4) 54276,65    - V1 Pulse waveform and Gate bits
+      //wrSID(0b00000100,    );             // (4) 54276,128   - V1 Noise waveform and Gate bits
       // these only work with pulse type?      
-      wrSID(0b00000010, 0b00000010 );     // (2) 54274  - pulse width (l)     
-      wrSID(0b00000011, 0b00001000 );     // (3) 54275  - pulse width (h)
+      wrSID(0b00000010, 0b00000010 );       // (2) 54274       - pulse width (l)     
+      wrSID(0b00000011, 0b00001000 );       // (3) 54275       - pulse width (h)
       //**** V1 ENVELOPE SETUP******** 
       //**** V1 FILTER SETUP ********* 
 
     //********************** Voice 2 parameters   *************************
     
-      wrSID(0b00000111, 0b000000000);    // (7) 54279, 0   -Set inital frequency
-      wrSID(0b00001000, 0b000101000);    // (8) 54280, 40  -Set inital frequency
+      wrSID(0b00000111, 0b000000000);       // (7) 54279, 0    - Set inital frequency
+      wrSID(0b00001000, 0b000101000);       // (8) 54280, 40   - Set inital frequency
       // wrSID(0b00001011, 0b01000001 );    // (11) 54283,65     CR - enable tone by setting waveform
-      wrSID(0b00001100, 0b00001001 );    // (12) 54284     Set Attack/Decay voice 2
-      wrSID(0b00001101, 0b10000000 );    // (13) 54285     Set Sustain/Release voice 2
-      //wrSID(0b00001011, 0b00010001 );  // (11) 54290,17   -V2 Triangle waveform and Gate bits 
-      //wrSID(0b00001011, 0b00100001 );  // (11) 54290,33   -V2 Sawtooth waveform and Gate bits 
-      wrSID(0b00001011, 0b01000001 );    // (11) 54290,65   -V2 Pulse waveform and Gate bits 
+      wrSID(0b00001100, 0b00001001 );       // (12) 54284        Set Attack/Decay voice 2
+      wrSID(0b00001101, 0b10000000 );       // (13) 54285        Set Sustain/Release voice 2
+      //wrSID(0b00001011, 0b00010001 );     // (11) 54290,17   - V2 Triangle waveform and Gate bits 
+      //wrSID(0b00001011, 0b00100001 );     // (11) 54290,33   - V2 Sawtooth waveform and Gate bits 
+      wrSID(0b00001011, 0b01000001 );       // (11) 54290,65   - V2 Pulse waveform and Gate bits 
       // these only work with pulse type?
-      wrSID(0b00001001, 0b00000010 );  //(9) 54281   - pulse width (l)
-      wrSID(0b00001010, 0b00001000 );  //(10) 54282  - pulse width (h)
+      wrSID(0b00001001, 0b00000010 );       // (9) 54281       - pulse width (l)
+      wrSID(0b00001010, 0b00001000 );       // (10) 54282      - pulse width (h)
     
    
     //********************** Voice 3 parameters   *************************
-      wrSID(0b00001110, 0b000000000);  // (14) 54286, 0  -Set inital frequency
-      wrSID(0b00001111, 0b000101000);  // (15) 54286, 40  -Set inital frequency
-      //wrSID(0b00010010, 0b01000001 );  // (18) 54290, 65     CR - enable tone by setting pulse ?
-      wrSID(0b00010011, 0b00001001 );  // (19) 54291     Set Attack/Decay voice 3
-      wrSID(0b00010100, 0b10000000 );  // (20) 54292     Set Sustain/Release voice 3
-      //wrSID(0b00010010, 0b00010001 );  // (18) 54290,17   -V2 Triangle waveform and Gate bits 
-      //wrSID(0b00010010, 0b00100001 );  // (18) 54290,33   -V2 Sawtooth waveform and Gate bits 
-      wrSID(0b00010010, 0b01000001 );    // (18) 54290,65   -V2 Pulse waveform and Gate bits 
-      wrSID(0b00010000, 0b00000010 );  //(16) 54280  - pulse width (l)     
-      wrSID(0b00010001, 0b00001000 );  //(17) 54281  - pulse width (h)
+      wrSID(0b00001110, 0b000000000);       // (14) 54286,0    - Set inital frequency
+      wrSID(0b00001111, 0b000101000);       // (15) 54286,40   - Set inital frequency
+      //wrSID(0b00010010, 0b01000001 );     // (18) 54290,65     CR - enable tone by setting pulse ?
+      wrSID(0b00010011, 0b00001001 );       // (19) 54291        Set Attack/Decay voice 3
+      wrSID(0b00010100, 0b10000000 );       // (20) 54292        Set Sustain/Release voice 3
+      //wrSID(0b00010010, 0b00010001 );     // (18) 54290,17   - V2 Triangle waveform and Gate bits 
+      //wrSID(0b00010010, 0b00100001 );     // (18) 54290,33   - V2 Sawtooth waveform and Gate bits 
+      wrSID(0b00010010, 0b01000001 );       // (18) 54290,65   - V2 Pulse waveform and Gate bits 
+      wrSID(0b00010000, 0b00000010 );       // (16) 54280      - pulse width (l)     
+      wrSID(0b00010001, 0b00001000 );       // (17) 54281      - pulse width (h)
 
 
 }
 
 
-/***************************************************/
 
-void poke(uint16_t addr, uint16_t value)
-{
-   //0xD400 == 54272 == SID ADDRESS IN C64 
-
-   //simulate a poke command (use the c64 address to access SID chip)
-
-   if(addr<54272){
-       addr = 54272;
-   }
-   if(addr>54300){
-       addr = 54300;
-   }
-
-   if(value>255){
-       value = 255;
-   }
-
-   uint16_t sidaddr =  (addr - 54272);
-   wrSID( (uint8_t)sidaddr, (uint8_t)value );
-
-}
 
 
 void poketest(void)
@@ -548,11 +538,11 @@ void poketest(void)
     poke( 54296 ,15  );    //  Set maximum volume
     poke( 54277 , 240  );  //  Set ATTACK/DECAY
     poke( 54278 , 240  );  //  Set SUSTAIN/RELEASE
-    poke( 54273 , 50 );   //
-    poke( 54272 , 0  );  // POKE one note in voice 1
-    poke( 54274 , 203  ); //pulse width 
-    poke( 54276 ,65  );   //choose pulse type and set gate bit (first bit is gate 0x1)
-    // //  wrSID(4,65  );   //same poke, expressed as a direct register write 
+    poke( 54273 , 50 );    //
+    poke( 54272 , 0  );    // POKE one note in voice 1
+    poke( 54274 , 203  );  //pulse width 
+    poke( 54276 ,65  );    //choose pulse type and set gate bit (first bit is gate 0x1)
+    // //  wrSID(4,65  );  //same poke, expressed as a direct register write 
     
     // VOICE2 //--------------------------------------------
     poke( 54296 ,15  );    //  Set maximum volume
@@ -560,7 +550,7 @@ void poketest(void)
     poke( 54284 , 240  );  //  Set ATTACK/DECAY
     poke( 54280 , 162 );   //    
     poke( 54279 , 100  );  // POKE one note in voice 1
-    poke( 54281 , 0  );   // pulse width 
+    poke( 54281 , 0  );    // pulse width 
     poke( 54282 , 50  );   // pulse width 
     poke( 54283 , 33  );   // choose pulse type and set gate bit (first bit is gate 0x1)
 
@@ -652,6 +642,57 @@ void test_notecmd(void)
         }
     }
 }
+
+
+void voice_sync_test(void)
+{
+
+  // 10 s=54272
+  // 20 forl=0to24:pokes+l,0:next
+  // 30 pokes+1,100
+  // 40 pokes+5,219
+  // 50 pokes+15,28
+  // 60 pokes+24,15
+  // 70 pokes+4,19
+  // 80 fort=1to5000:next
+  // 90 pokes+4,18
+  // 100 fort=1to1000:next:pokes+24,0
+ 
+  poke(54273,100); // Set high frequency voice 1. 
+  poke(54277,219); // Set Attack/Decay for voice 1 (A=13, D=11).
+  poke(54287,28);  // Set high frequency voice 3.
+  poke(54296,15);  // set volume.
+  poke(54276,19);  // Set start triangle, sync waveform control for voice 1. 
+  //fort=1to5000:next
+  poke(54276,18);  //Set stop triangle, sync waveform control for voice 1.
+
+}
+
+
+void voice_ring_test(void)
+{
+    // 30 pokes+1,130
+    // 40 pokes+5,9
+    // 50 pokes+15,30
+    // 60 pokes+24,15
+    // 70 forl=1to12:pokes+4,21
+    // 80 fort=1to1000:next:pokes+4,20
+    // 90 fort=1to1000:next:next
+
+    poke(54273, 30); // Set high frequency for voice 1
+    poke(54277, 9  ); // Set Attack/Decay for voice 1 (A=0, D=9).
+    poke(54287, 230 ); // Set high frequency for voice 3.
+    poke(54296,15);  // set volume.
+
+    _delay_ms(100);    // forl=1to12:pokes+4,21
+    poke(54276,21);  // set stop triangle, ring mod.
+
+    _delay_ms(100);   // fort=1to1000:next:pokes+4,20
+    poke(54276,20);  // next ding.  
+
+}
+
+
 /***************************************************/
 
 int main (void)
@@ -663,16 +704,62 @@ int main (void)
     sid_clear_registers(); //poke 53272+24,0 
 
     
-    setup_sid_voices();
+    //setup_sid_voices();
     
     // test_leds();     // alert user we are online and ready to play
     //test_addr_bus(); // flash each bit in address bus
 
+    // VOICE1 //-------------------------------------------- 
+    poke( 54296 , 15  );    //  Set maximum volume
+    poke( 54277 , 240  );  //  Set ATTACK/DECAY
+    poke( 54278 , 100  );  //  Set SUSTAIN/RELEASE
+
+    poke( 54272 , 200  );    // POKE one note in voice 1
+    poke( 54273 , 150 );     // POKE one note in voice 1
+   
+    poke( 54274 , 153  );   // pulse width 
+    poke( 54276 , 65  );    // choose waveform type and set gate bit (first bit is gate 0x1)
+    
+
+    /* 
+    // // VOICE2 //--------------------------------------------
+    poke( 54296 , 15  );    //  Set maximum volume
+    poke( 54285 , 240  );  //  Set SUSTAIN/RELEASE
+    poke( 54284 , 240  );  //  Set ATTACK/DECAY
+    poke( 54280 , 162 );   //    
+    poke( 54279 , 100  );  // POKE one note in voice 2
+    poke( 54281 , 0  );    // pulse width 
+    poke( 54282 , 50  );   // pulse width 
+    poke( 54283 , 65  );   // choose waveform type and set gate bit (first bit is gate 0x1)
+    
+
+    // VOICE3 //--------------------------------------------
+    poke( 54296 , 15  );   //  Set maximum volume
+    poke( 54291 , 240  );  //  Set ATTACK/DECAY
+    poke( 54292 , 240  );  //  Set SUSTAIN/RELEASE
+    poke( 54286 , 0  );    // POKE one note in voice 3
+    poke( 54287 , 255  );  //
+    poke( 54288 , 203  );  // pulse width 
+    poke( 54290 , 65  );   // choose waveform type and set gate bit (first bit is gate 0x1)
+    */
+
    while(1)
    {
+    
+      sweep_pulse_width_v1();
+      
+      //sweep_freqency_v1();
 
-       test_notecmd();
-       
+      //test_notecmd();
+
+      //poketest();
+
+      //poketest2();
+
+      //voice_ring_test();
+
+      //voice_sync_test();
+
    }
 
 

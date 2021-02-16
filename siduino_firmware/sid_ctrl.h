@@ -42,6 +42,8 @@ void delay();
 void longdelay();
 
 void wrSID(uint8_t addr, uint8_t data);
+void poke(uint16_t addr, uint16_t value);
+
 void sid_clear_registers();
 void init_SID_bus();
 void enable_timer_isr();

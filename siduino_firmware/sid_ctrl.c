@@ -41,6 +41,11 @@ volatile bool running = false;
 
  ****************************************************************
 
+ SID WAVEFORM TYPES 
+ 17= TRIANGLE , 33= SAW, 65= PULSE, 129= NOISE 
+
+ ****************************************************************
+ 
  SID-ADR-Table:
 
      VALUE    ATTACK    DECAY/RELEASE
@@ -298,6 +303,34 @@ void wrSID(uint8_t addr, uint8_t data)
 
    running = false;
 }
+
+
+/************************************************************/
+/************************************************************/
+
+
+void poke(uint16_t addr, uint16_t value)
+{
+   //0xD400 == 54272 == SID ADDRESS IN C64 
+
+   //simulate a poke command (use the c64 address to access SID chip)
+
+   if(addr<54272){
+       addr = 54272;
+   }
+   if(addr>54300){
+       addr = 54300;
+   }
+
+   if(value>255){
+       value = 255;
+   }
+
+   uint16_t sidaddr =  (addr - 54272);
+   wrSID( (uint8_t)sidaddr, (uint8_t)value );
+
+}
+
 
 /************************************************************/
 /************************************************************/
